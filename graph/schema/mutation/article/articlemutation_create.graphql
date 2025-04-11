@@ -1,0 +1,23 @@
+extend type ArticleMutation {
+    create(
+        input: ArticleCreateInput!
+    ): ArticleCreateResponse!
+}
+
+input ArticleCreateInput {
+    id: UUID!
+    title: String!
+    content: String!
+}
+
+type ArticleCreateOk {
+    article: Article!
+}
+
+type ArticleCreateBadRequest {
+    message: String!
+}
+
+union ArticleCreateResponse =
+    ArticleCreateOk
+    | ArticleCreateBadRequest

@@ -1,0 +1,25 @@
+extend type CommentMutation {
+    create(
+        input: CommentCreateInput!
+    ): CommentCreateResponse!
+}
+
+input CommentCreateInput {
+    id: UUID!
+    content: String!
+    articleId: UUID!
+    parentId: UUID
+    authorId: UUID!
+}
+
+type CommentCreateOk {
+    comment: Comment!
+}
+
+type CommentCreateBadRequest {
+    message: String!
+}
+
+union CommentCreateResponse =
+    CommentCreateOk
+    | CommentCreateBadRequest

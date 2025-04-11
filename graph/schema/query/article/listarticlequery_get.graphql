@@ -1,0 +1,19 @@
+extend type ListArticleQuery {
+    get(
+        pageNumber: Int,
+        pageSize: Int
+    ): ListArticleGetResponse!
+}
+
+type ListArticleGetOk {
+    articles: [Article]!
+    total: Int!
+}
+
+type ListArticleGetBadRequest{
+    message: String!
+}
+
+union ListArticleGetResponse = 
+    | ListArticleGetOk
+    | ListArticleGetBadRequest

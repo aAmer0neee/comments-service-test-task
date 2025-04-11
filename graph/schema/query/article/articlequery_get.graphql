@@ -1,0 +1,22 @@
+extend type ArticleQuery {
+    get(
+    articleId: UUID!,
+    commentPage: Int!,
+    commentPageSize: Int!
+
+    ): ArticleGetResponse!
+}
+
+type ArticleGetOK {
+    article: Article!
+
+    comments: [Comment]
+}
+
+type ArticleGetBadRequest{
+    message: String!
+}
+
+union ArticleGetResponse = 
+    | ArticleGetOK
+    | ArticleGetBadRequest
