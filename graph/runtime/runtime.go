@@ -52,7 +52,6 @@ type ComplexityRoot struct {
 		Content           func(childComplexity int) int
 		CreatedAt         func(childComplexity int) int
 		ID                func(childComplexity int) int
-		Title             func(childComplexity int) int
 	}
 
 	ArticleCreateBadRequest struct {
@@ -72,17 +71,8 @@ type ComplexityRoot struct {
 		Comments func(childComplexity int) int
 	}
 
-	ArticleMutation struct {
-		Create func(childComplexity int, input model.ArticleCreateInput) int
-	}
-
-	ArticleQuery struct {
-		Get func(childComplexity int, articleID uuid.UUID, commentPage int32, commentPageSize int32) int
-	}
-
 	Comment struct {
 		ArticleID func(childComplexity int) int
-		AuthorID  func(childComplexity int) int
 		Content   func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -97,10 +87,6 @@ type ComplexityRoot struct {
 		Comment func(childComplexity int) int
 	}
 
-	CommentMutation struct {
-		Create func(childComplexity int, input model.CommentCreateInput) int
-	}
-
 	ListArticleGetBadRequest struct {
 		Message func(childComplexity int) int
 	}
@@ -110,28 +96,24 @@ type ComplexityRoot struct {
 		Total    func(childComplexity int) int
 	}
 
-	ListArticleQuery struct {
-		Get func(childComplexity int, pageNumber *int32, pageSize *int32) int
-	}
-
 	Mutation struct {
-		Article func(childComplexity int) int
-		Comment func(childComplexity int) int
+		CreateArticle func(childComplexity int, input model.ArticleCreateInput) int
+		CreateComment func(childComplexity int, input model.CommentCreateInput) int
 	}
 
 	Query struct {
-		Article     func(childComplexity int) int
-		ListArticle func(childComplexity int) int
+		GetArticle func(childComplexity int, articleID uuid.UUID, commentPage int32, commentPageSize int32) int
+		GetList    func(childComplexity int, pageNumber *int32, pageSize *int32) int
 	}
 }
 
 type MutationResolver interface {
-	Article(ctx context.Context) (*model.ArticleMutation, error)
-	Comment(ctx context.Context) (*model.CommentMutation, error)
+	CreateArticle(ctx context.Context, input model.ArticleCreateInput) (model.ArticleCreateResponse, error)
+	CreateComment(ctx context.Context, input model.CommentCreateInput) (model.CommentCreateResponse, error)
 }
 type QueryResolver interface {
-	Article(ctx context.Context) (*model.ArticleQuery, error)
-	ListArticle(ctx context.Context) (*model.ListArticleQuery, error)
+	GetArticle(ctx context.Context, articleID uuid.UUID, commentPage int32, commentPageSize int32) (model.ArticleGetResponse, error)
+	GetList(ctx context.Context, pageNumber *int32, pageSize *int32) (model.ListArticleGetResponse, error)
 }
 
 type executableSchema struct {
@@ -181,13 +163,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Article.ID(childComplexity), true
 
-	case "Article.title":
-		if e.complexity.Article.Title == nil {
-			break
-		}
-
-		return e.complexity.Article.Title(childComplexity), true
-
 	case "ArticleCreateBadRequest.message":
 		if e.complexity.ArticleCreateBadRequest.Message == nil {
 			break
@@ -223,43 +198,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ArticleGetOK.Comments(childComplexity), true
 
-	case "ArticleMutation.create":
-		if e.complexity.ArticleMutation.Create == nil {
-			break
-		}
-
-		args, err := ec.field_ArticleMutation_create_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.ArticleMutation.Create(childComplexity, args["input"].(model.ArticleCreateInput)), true
-
-	case "ArticleQuery.get":
-		if e.complexity.ArticleQuery.Get == nil {
-			break
-		}
-
-		args, err := ec.field_ArticleQuery_get_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.ArticleQuery.Get(childComplexity, args["articleId"].(uuid.UUID), args["commentPage"].(int32), args["commentPageSize"].(int32)), true
-
 	case "Comment.articleId":
 		if e.complexity.Comment.ArticleID == nil {
 			break
 		}
 
 		return e.complexity.Comment.ArticleID(childComplexity), true
-
-	case "Comment.authorId":
-		if e.complexity.Comment.AuthorID == nil {
-			break
-		}
-
-		return e.complexity.Comment.AuthorID(childComplexity), true
 
 	case "Comment.content":
 		if e.complexity.Comment.Content == nil {
@@ -303,18 +247,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CommentCreateOk.Comment(childComplexity), true
 
-	case "CommentMutation.create":
-		if e.complexity.CommentMutation.Create == nil {
-			break
-		}
-
-		args, err := ec.field_CommentMutation_create_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.CommentMutation.Create(childComplexity, args["input"].(model.CommentCreateInput)), true
-
 	case "ListArticleGetBadRequest.message":
 		if e.complexity.ListArticleGetBadRequest.Message == nil {
 			break
@@ -336,45 +268,53 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ListArticleGetOk.Total(childComplexity), true
 
-	case "ListArticleQuery.get":
-		if e.complexity.ListArticleQuery.Get == nil {
+	case "Mutation.createArticle":
+		if e.complexity.Mutation.CreateArticle == nil {
 			break
 		}
 
-		args, err := ec.field_ListArticleQuery_get_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createArticle_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.ListArticleQuery.Get(childComplexity, args["pageNumber"].(*int32), args["pageSize"].(*int32)), true
+		return e.complexity.Mutation.CreateArticle(childComplexity, args["input"].(model.ArticleCreateInput)), true
 
-	case "Mutation.article":
-		if e.complexity.Mutation.Article == nil {
+	case "Mutation.createComment":
+		if e.complexity.Mutation.CreateComment == nil {
 			break
 		}
 
-		return e.complexity.Mutation.Article(childComplexity), true
+		args, err := ec.field_Mutation_createComment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
 
-	case "Mutation.comment":
-		if e.complexity.Mutation.Comment == nil {
+		return e.complexity.Mutation.CreateComment(childComplexity, args["input"].(model.CommentCreateInput)), true
+
+	case "Query.getArticle":
+		if e.complexity.Query.GetArticle == nil {
 			break
 		}
 
-		return e.complexity.Mutation.Comment(childComplexity), true
+		args, err := ec.field_Query_getArticle_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
 
-	case "Query.article":
-		if e.complexity.Query.Article == nil {
+		return e.complexity.Query.GetArticle(childComplexity, args["articleId"].(uuid.UUID), args["commentPage"].(int32), args["commentPageSize"].(int32)), true
+
+	case "Query.getList":
+		if e.complexity.Query.GetList == nil {
 			break
 		}
 
-		return e.complexity.Query.Article(childComplexity), true
-
-	case "Query.listArticle":
-		if e.complexity.Query.ListArticle == nil {
-			break
+		args, err := ec.field_Query_getList_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
 		}
 
-		return e.complexity.Query.ListArticle(childComplexity), true
+		return e.complexity.Query.GetList(childComplexity, args["pageNumber"].(*int32), args["pageSize"].(*int32)), true
 
 	}
 	return 0, false
@@ -485,7 +425,6 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../schema/models/article.graphql", Input: `type Article {
     id: UUID!
-    title: String!
     content: String!
     createdAt: String!
     commentPermission: Boolean!
@@ -496,22 +435,15 @@ var sources = []*ast.Source{
     createdAt: String!
     articleId: UUID!
     parentId: UUID
-    authorId: UUID!
 }`, BuiltIn: false},
-	{Name: "../schema/mutation/article/articlemutation.graphql", Input: `type ArticleMutation  
-
-extend type Mutation {
-    article: ArticleMutation!
-}`, BuiltIn: false},
-	{Name: "../schema/mutation/article/articlemutation_create.graphql", Input: `extend type ArticleMutation {
-    create(
+	{Name: "../schema/mutation/article/articlemutation_create.graphql", Input: `extend type Mutation {
+    createArticle(
         input: ArticleCreateInput!
     ): ArticleCreateResponse!
 }
 
 input ArticleCreateInput {
     id: UUID!
-    title: String!
     content: String!
 }
 
@@ -523,16 +455,9 @@ type ArticleCreateBadRequest {
     message: String!
 }
 
-union ArticleCreateResponse =
-    ArticleCreateOk
-    | ArticleCreateBadRequest`, BuiltIn: false},
-	{Name: "../schema/mutation/comment/commentmutation.graphql", Input: `type CommentMutation
-
-extend type Mutation {
-    comment: CommentMutation
-}`, BuiltIn: false},
-	{Name: "../schema/mutation/comment/commentmutation_create.graphql", Input: `extend type CommentMutation {
-    create(
+union ArticleCreateResponse = ArticleCreateOk | ArticleCreateBadRequest`, BuiltIn: false},
+	{Name: "../schema/mutation/comment/commentmutation_create.graphql", Input: `extend type Mutation {
+    createComment(
         input: CommentCreateInput!
     ): CommentCreateResponse!
 }
@@ -542,7 +467,6 @@ input CommentCreateInput {
     content: String!
     articleId: UUID!
     parentId: UUID
-    authorId: UUID!
 }
 
 type CommentCreateOk {
@@ -553,20 +477,12 @@ type CommentCreateBadRequest {
     message: String!
 }
 
-union CommentCreateResponse =
-    CommentCreateOk
-    | CommentCreateBadRequest`, BuiltIn: false},
-	{Name: "../schema/query/article/articlequery.graphql", Input: `type ArticleQuery
-
-extend type Query {
-    article: ArticleQuery!
-}`, BuiltIn: false},
-	{Name: "../schema/query/article/articlequery_get.graphql", Input: `extend type ArticleQuery {
-    get(
+union CommentCreateResponse = CommentCreateOk | CommentCreateBadRequest`, BuiltIn: false},
+	{Name: "../schema/query/article/articlequery_get.graphql", Input: `extend type Query{
+    getArticle(
     articleId: UUID!,
     commentPage: Int!,
     commentPageSize: Int!
-
     ): ArticleGetResponse!
 }
 
@@ -580,21 +496,15 @@ type ArticleGetBadRequest{
     message: String!
 }
 
-union ArticleGetResponse = 
-    | ArticleGetOK
-    | ArticleGetBadRequest
+union ArticleGetResponse = ArticleGetOK | ArticleGetBadRequest
 `, BuiltIn: false},
-	{Name: "../schema/query/article/listarticlequery.graphql", Input: `type ListArticleQuery
-
-extend type Query {
-    listArticle: ListArticleQuery!
-}`, BuiltIn: false},
-	{Name: "../schema/query/article/listarticlequery_get.graphql", Input: `extend type ListArticleQuery {
-    get(
+	{Name: "../schema/query/article/listarticlequery_get.graphql", Input: `extend type Query{
+     getList(
         pageNumber: Int,
         pageSize: Int
     ): ListArticleGetResponse!
 }
+
 
 type ListArticleGetOk {
     articles: [Article]!
@@ -605,9 +515,7 @@ type ListArticleGetBadRequest{
     message: String!
 }
 
-union ListArticleGetResponse = 
-    | ListArticleGetOk
-    | ListArticleGetBadRequest
+union ListArticleGetResponse = ListArticleGetOk | ListArticleGetBadRequest
 `, BuiltIn: false},
 	{Name: "../schema/scalar.graphql", Input: `scalar UUID`, BuiltIn: false},
 }
@@ -617,17 +525,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_ArticleMutation_create_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_createArticle_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_ArticleMutation_create_argsInput(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_createArticle_argsInput(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_ArticleMutation_create_argsInput(
+func (ec *executionContext) field_Mutation_createArticle_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (model.ArticleCreateInput, error) {
@@ -640,76 +548,17 @@ func (ec *executionContext) field_ArticleMutation_create_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_ArticleQuery_get_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_createComment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_ArticleQuery_get_argsArticleID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["articleId"] = arg0
-	arg1, err := ec.field_ArticleQuery_get_argsCommentPage(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["commentPage"] = arg1
-	arg2, err := ec.field_ArticleQuery_get_argsCommentPageSize(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["commentPageSize"] = arg2
-	return args, nil
-}
-func (ec *executionContext) field_ArticleQuery_get_argsArticleID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uuid.UUID, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("articleId"))
-	if tmp, ok := rawArgs["articleId"]; ok {
-		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
-	}
-
-	var zeroVal uuid.UUID
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_ArticleQuery_get_argsCommentPage(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("commentPage"))
-	if tmp, ok := rawArgs["commentPage"]; ok {
-		return ec.unmarshalNInt2int32(ctx, tmp)
-	}
-
-	var zeroVal int32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_ArticleQuery_get_argsCommentPageSize(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("commentPageSize"))
-	if tmp, ok := rawArgs["commentPageSize"]; ok {
-		return ec.unmarshalNInt2int32(ctx, tmp)
-	}
-
-	var zeroVal int32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_CommentMutation_create_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_CommentMutation_create_argsInput(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_createComment_argsInput(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_CommentMutation_create_argsInput(
+func (ec *executionContext) field_Mutation_createComment_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (model.CommentCreateInput, error) {
@@ -719,47 +568,6 @@ func (ec *executionContext) field_CommentMutation_create_argsInput(
 	}
 
 	var zeroVal model.CommentCreateInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_ListArticleQuery_get_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_ListArticleQuery_get_argsPageNumber(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["pageNumber"] = arg0
-	arg1, err := ec.field_ListArticleQuery_get_argsPageSize(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["pageSize"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_ListArticleQuery_get_argsPageNumber(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageNumber"))
-	if tmp, ok := rawArgs["pageNumber"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
-	}
-
-	var zeroVal *int32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_ListArticleQuery_get_argsPageSize(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
-	if tmp, ok := rawArgs["pageSize"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
-	}
-
-	var zeroVal *int32
 	return zeroVal, nil
 }
 
@@ -783,6 +591,106 @@ func (ec *executionContext) field_Query___type_argsName(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getArticle_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getArticle_argsArticleID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["articleId"] = arg0
+	arg1, err := ec.field_Query_getArticle_argsCommentPage(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["commentPage"] = arg1
+	arg2, err := ec.field_Query_getArticle_argsCommentPageSize(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["commentPageSize"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Query_getArticle_argsArticleID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("articleId"))
+	if tmp, ok := rawArgs["articleId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getArticle_argsCommentPage(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("commentPage"))
+	if tmp, ok := rawArgs["commentPage"]; ok {
+		return ec.unmarshalNInt2int32(ctx, tmp)
+	}
+
+	var zeroVal int32
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getArticle_argsCommentPageSize(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("commentPageSize"))
+	if tmp, ok := rawArgs["commentPageSize"]; ok {
+		return ec.unmarshalNInt2int32(ctx, tmp)
+	}
+
+	var zeroVal int32
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getList_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getList_argsPageNumber(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["pageNumber"] = arg0
+	arg1, err := ec.field_Query_getList_argsPageSize(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["pageSize"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Query_getList_argsPageNumber(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageNumber"))
+	if tmp, ok := rawArgs["pageNumber"]; ok {
+		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+	}
+
+	var zeroVal *int32
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getList_argsPageSize(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
+	if tmp, ok := rawArgs["pageSize"]; ok {
+		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+	}
+
+	var zeroVal *int32
 	return zeroVal, nil
 }
 
@@ -925,50 +833,6 @@ func (ec *executionContext) fieldContext_Article_id(_ context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type UUID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Article_title(ctx context.Context, field graphql.CollectedField, obj *model.Article) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Article_title(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Title, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Article_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Article",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1191,8 +1055,6 @@ func (ec *executionContext) fieldContext_ArticleCreateOk_article(_ context.Conte
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Article_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Article_title(ctx, field)
 			case "content":
 				return ec.fieldContext_Article_content(ctx, field)
 			case "createdAt":
@@ -1291,8 +1153,6 @@ func (ec *executionContext) fieldContext_ArticleGetOK_article(_ context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Article_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Article_title(ctx, field)
 			case "content":
 				return ec.fieldContext_Article_content(ctx, field)
 			case "createdAt":
@@ -1352,121 +1212,9 @@ func (ec *executionContext) fieldContext_ArticleGetOK_comments(_ context.Context
 				return ec.fieldContext_Comment_articleId(ctx, field)
 			case "parentId":
 				return ec.fieldContext_Comment_parentId(ctx, field)
-			case "authorId":
-				return ec.fieldContext_Comment_authorId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
 		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ArticleMutation_create(ctx context.Context, field graphql.CollectedField, obj *model.ArticleMutation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ArticleMutation_create(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Create, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.ArticleCreateResponse)
-	fc.Result = res
-	return ec.marshalNArticleCreateResponse2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleCreateResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ArticleMutation_create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ArticleMutation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ArticleCreateResponse does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_ArticleMutation_create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ArticleQuery_get(ctx context.Context, field graphql.CollectedField, obj *model.ArticleQuery) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ArticleQuery_get(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Get, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.ArticleGetResponse)
-	fc.Result = res
-	return ec.marshalNArticleGetResponse2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleGetResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ArticleQuery_get(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ArticleQuery",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ArticleGetResponse does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_ArticleQuery_get_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -1688,50 +1436,6 @@ func (ec *executionContext) fieldContext_Comment_parentId(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Comment_authorId(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Comment_authorId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AuthorID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uuid.UUID)
-	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Comment_authorId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Comment",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _CommentCreateBadRequest_message(ctx context.Context, field graphql.CollectedField, obj *model.CommentCreateBadRequest) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CommentCreateBadRequest_message(ctx, field)
 	if err != nil {
@@ -1825,66 +1529,9 @@ func (ec *executionContext) fieldContext_CommentCreateOk_comment(_ context.Conte
 				return ec.fieldContext_Comment_articleId(ctx, field)
 			case "parentId":
 				return ec.fieldContext_Comment_parentId(ctx, field)
-			case "authorId":
-				return ec.fieldContext_Comment_authorId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
 		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _CommentMutation_create(ctx context.Context, field graphql.CollectedField, obj *model.CommentMutation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_CommentMutation_create(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Create, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.CommentCreateResponse)
-	fc.Result = res
-	return ec.marshalNCommentCreateResponse2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐCommentCreateResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_CommentMutation_create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "CommentMutation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type CommentCreateResponse does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_CommentMutation_create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -1974,8 +1621,6 @@ func (ec *executionContext) fieldContext_ListArticleGetOk_articles(_ context.Con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Article_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Article_title(ctx, field)
 			case "content":
 				return ec.fieldContext_Article_content(ctx, field)
 			case "createdAt":
@@ -2033,8 +1678,8 @@ func (ec *executionContext) fieldContext_ListArticleGetOk_total(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ListArticleQuery_get(ctx context.Context, field graphql.CollectedField, obj *model.ListArticleQuery) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ListArticleQuery_get(ctx, field)
+func (ec *executionContext) _Mutation_createArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createArticle(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2047,7 +1692,172 @@ func (ec *executionContext) _ListArticleQuery_get(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Get, nil
+		return ec.resolvers.Mutation().CreateArticle(rctx, fc.Args["input"].(model.ArticleCreateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ArticleCreateResponse)
+	fc.Result = res
+	return ec.marshalNArticleCreateResponse2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleCreateResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ArticleCreateResponse does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createComment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateComment(rctx, fc.Args["input"].(model.CommentCreateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.CommentCreateResponse)
+	fc.Result = res
+	return ec.marshalNCommentCreateResponse2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐCommentCreateResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createComment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type CommentCreateResponse does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createComment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getArticle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetArticle(rctx, fc.Args["articleId"].(uuid.UUID), fc.Args["commentPage"].(int32), fc.Args["commentPageSize"].(int32))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ArticleGetResponse)
+	fc.Result = res
+	return ec.marshalNArticleGetResponse2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleGetResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getArticle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ArticleGetResponse does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getArticle_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetList(rctx, fc.Args["pageNumber"].(*int32), fc.Args["pageSize"].(*int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2064,12 +1874,12 @@ func (ec *executionContext) _ListArticleQuery_get(ctx context.Context, field gra
 	return ec.marshalNListArticleGetResponse2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐListArticleGetResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ListArticleQuery_get(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ListArticleQuery",
+		Object:     "Query",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ListArticleGetResponse does not have child fields")
 		},
@@ -2081,198 +1891,9 @@ func (ec *executionContext) fieldContext_ListArticleQuery_get(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_ListArticleQuery_get_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_getList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_article(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_article(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Article(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ArticleMutation)
-	fc.Result = res
-	return ec.marshalNArticleMutation2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleMutation(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_article(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "create":
-				return ec.fieldContext_ArticleMutation_create(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ArticleMutation", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_comment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_comment(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Comment(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.CommentMutation)
-	fc.Result = res
-	return ec.marshalOCommentMutation2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐCommentMutation(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_comment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "create":
-				return ec.fieldContext_CommentMutation_create(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CommentMutation", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_article(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_article(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Article(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ArticleQuery)
-	fc.Result = res
-	return ec.marshalNArticleQuery2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleQuery(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_article(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "get":
-				return ec.fieldContext_ArticleQuery_get(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ArticleQuery", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_listArticle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_listArticle(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ListArticle(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ListArticleQuery)
-	fc.Result = res
-	return ec.marshalNListArticleQuery2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐListArticleQuery(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_listArticle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "get":
-				return ec.fieldContext_ListArticleQuery_get(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ListArticleQuery", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -4366,7 +3987,7 @@ func (ec *executionContext) unmarshalInputArticleCreateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title", "content"}
+	fieldsInOrder := [...]string{"id", "content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4380,13 +4001,6 @@ func (ec *executionContext) unmarshalInputArticleCreateInput(ctx context.Context
 				return it, err
 			}
 			it.ID = data
-		case "title":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Title = data
 		case "content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -4407,7 +4021,7 @@ func (ec *executionContext) unmarshalInputCommentCreateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "content", "articleId", "parentId", "authorId"}
+	fieldsInOrder := [...]string{"id", "content", "articleId", "parentId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4442,13 +4056,6 @@ func (ec *executionContext) unmarshalInputCommentCreateInput(ctx context.Context
 				return it, err
 			}
 			it.ParentID = data
-		case "authorId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authorId"))
-			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.AuthorID = data
 		}
 	}
 
@@ -4568,11 +4175,6 @@ func (ec *executionContext) _Article(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = graphql.MarshalString("Article")
 		case "id":
 			out.Values[i] = ec._Article_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "title":
-			out.Values[i] = ec._Article_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4772,84 +4374,6 @@ func (ec *executionContext) _ArticleGetOK(ctx context.Context, sel ast.Selection
 	return out
 }
 
-var articleMutationImplementors = []string{"ArticleMutation"}
-
-func (ec *executionContext) _ArticleMutation(ctx context.Context, sel ast.SelectionSet, obj *model.ArticleMutation) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, articleMutationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ArticleMutation")
-		case "create":
-			out.Values[i] = ec._ArticleMutation_create(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var articleQueryImplementors = []string{"ArticleQuery"}
-
-func (ec *executionContext) _ArticleQuery(ctx context.Context, sel ast.SelectionSet, obj *model.ArticleQuery) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, articleQueryImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ArticleQuery")
-		case "get":
-			out.Values[i] = ec._ArticleQuery_get(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var commentImplementors = []string{"Comment"}
 
 func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, obj *model.Comment) graphql.Marshaler {
@@ -4883,11 +4407,6 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "parentId":
 			out.Values[i] = ec._Comment_parentId(ctx, field, obj)
-		case "authorId":
-			out.Values[i] = ec._Comment_authorId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4963,45 +4482,6 @@ func (ec *executionContext) _CommentCreateOk(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("CommentCreateOk")
 		case "comment":
 			out.Values[i] = ec._CommentCreateOk_comment(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var commentMutationImplementors = []string{"CommentMutation"}
-
-func (ec *executionContext) _CommentMutation(ctx context.Context, sel ast.SelectionSet, obj *model.CommentMutation) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, commentMutationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("CommentMutation")
-		case "create":
-			out.Values[i] = ec._CommentMutation_create(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5111,45 +4591,6 @@ func (ec *executionContext) _ListArticleGetOk(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var listArticleQueryImplementors = []string{"ListArticleQuery"}
-
-func (ec *executionContext) _ListArticleQuery(ctx context.Context, sel ast.SelectionSet, obj *model.ListArticleQuery) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, listArticleQueryImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ListArticleQuery")
-		case "get":
-			out.Values[i] = ec._ListArticleQuery_get(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -5169,17 +4610,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "article":
+		case "createArticle":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_article(ctx, field)
+				return ec._Mutation_createArticle(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "comment":
+		case "createComment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_comment(ctx, field)
+				return ec._Mutation_createComment(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5222,7 +4666,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "article":
+		case "getArticle":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -5231,7 +4675,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_article(ctx, field)
+				res = ec._Query_getArticle(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5244,7 +4688,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "listArticle":
+		case "getList":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -5253,7 +4697,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_listArticle(ctx, field)
+				res = ec._Query_getList(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5705,34 +5149,6 @@ func (ec *executionContext) marshalNArticleGetResponse2githubᚗcomᚋaAmer0neee
 	return ec._ArticleGetResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNArticleMutation2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleMutation(ctx context.Context, sel ast.SelectionSet, v model.ArticleMutation) graphql.Marshaler {
-	return ec._ArticleMutation(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNArticleMutation2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleMutation(ctx context.Context, sel ast.SelectionSet, v *model.ArticleMutation) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._ArticleMutation(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNArticleQuery2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleQuery(ctx context.Context, sel ast.SelectionSet, v model.ArticleQuery) graphql.Marshaler {
-	return ec._ArticleQuery(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNArticleQuery2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleQuery(ctx context.Context, sel ast.SelectionSet, v *model.ArticleQuery) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._ArticleQuery(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5796,20 +5212,6 @@ func (ec *executionContext) marshalNListArticleGetResponse2githubᚗcomᚋaAmer0
 		return graphql.Null
 	}
 	return ec._ListArticleGetResponse(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNListArticleQuery2githubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐListArticleQuery(ctx context.Context, sel ast.SelectionSet, v model.ListArticleQuery) graphql.Marshaler {
-	return ec._ListArticleQuery(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNListArticleQuery2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐListArticleQuery(ctx context.Context, sel ast.SelectionSet, v *model.ListArticleQuery) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._ListArticleQuery(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
@@ -6172,13 +5574,6 @@ func (ec *executionContext) marshalOComment2ᚖgithubᚗcomᚋaAmer0neeeᚋcomme
 		return graphql.Null
 	}
 	return ec._Comment(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOCommentMutation2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐCommentMutation(ctx context.Context, sel ast.SelectionSet, v *model.CommentMutation) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._CommentMutation(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {

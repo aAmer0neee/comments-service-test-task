@@ -1,5 +1,0 @@
-type ListArticleQuery
-
-extend type Query {
-    listArticle: ListArticleQuery!
-}

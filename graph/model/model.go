@@ -24,7 +24,6 @@ type ListArticleGetResponse interface {
 
 type Article struct {
 	ID                uuid.UUID `json:"id"`
-	Title             string    `json:"title"`
 	Content           string    `json:"content"`
 	CreatedAt         string    `json:"createdAt"`
 	CommentPermission bool      `json:"commentPermission"`
@@ -38,7 +37,6 @@ func (ArticleCreateBadRequest) IsArticleCreateResponse() {}
 
 type ArticleCreateInput struct {
 	ID      uuid.UUID `json:"id"`
-	Title   string    `json:"title"`
 	Content string    `json:"content"`
 }
 
@@ -61,21 +59,12 @@ type ArticleGetOk struct {
 
 func (ArticleGetOk) IsArticleGetResponse() {}
 
-type ArticleMutation struct {
-	Create ArticleCreateResponse `json:"create"`
-}
-
-type ArticleQuery struct {
-	Get ArticleGetResponse `json:"get"`
-}
-
 type Comment struct {
 	ID        uuid.UUID  `json:"id"`
 	Content   string     `json:"content"`
 	CreatedAt string     `json:"createdAt"`
 	ArticleID uuid.UUID  `json:"articleId"`
 	ParentID  *uuid.UUID `json:"parentId,omitempty"`
-	AuthorID  uuid.UUID  `json:"authorId"`
 }
 
 type CommentCreateBadRequest struct {
@@ -89,7 +78,6 @@ type CommentCreateInput struct {
 	Content   string     `json:"content"`
 	ArticleID uuid.UUID  `json:"articleId"`
 	ParentID  *uuid.UUID `json:"parentId,omitempty"`
-	AuthorID  uuid.UUID  `json:"authorId"`
 }
 
 type CommentCreateOk struct {
@@ -97,10 +85,6 @@ type CommentCreateOk struct {
 }
 
 func (CommentCreateOk) IsCommentCreateResponse() {}
-
-type CommentMutation struct {
-	Create CommentCreateResponse `json:"create"`
-}
 
 type ListArticleGetBadRequest struct {
 	Message string `json:"message"`
@@ -114,10 +98,6 @@ type ListArticleGetOk struct {
 }
 
 func (ListArticleGetOk) IsListArticleGetResponse() {}
-
-type ListArticleQuery struct {
-	Get ListArticleGetResponse `json:"get"`
-}
 
 type Mutation struct {
 }

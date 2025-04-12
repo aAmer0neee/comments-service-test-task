@@ -4,5 +4,4 @@ type Comment {
     createdAt: String!
     articleId: UUID!
     parentId: UUID
-    authorId: UUID!
 }

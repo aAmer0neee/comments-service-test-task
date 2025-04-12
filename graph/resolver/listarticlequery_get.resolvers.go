@@ -11,7 +11,7 @@ import (
 	"github.com/aAmer0neee/comments-service-test-task/graph/model"
 )
 
-// Comment is the resolver for the comment field.
-func (r *mutationResolver) Comment(ctx context.Context) (*model.CommentMutation, error) {
-	panic(fmt.Errorf("not implemented: Comment - comment"))
+// GetList is the resolver for the getList field.
+func (r *queryResolver) GetList(ctx context.Context, pageNumber *int32, pageSize *int32) (model.ListArticleGetResponse, error) {
+	panic(fmt.Errorf("not implemented: GetList - getList"))
 }

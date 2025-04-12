@@ -1,6 +1,5 @@
 type Article {
     id: UUID!
-    title: String!
     content: String!
     createdAt: String!
     commentPermission: Boolean!

@@ -12,9 +12,9 @@ import (
 	"github.com/aAmer0neee/comments-service-test-task/graph/runtime"
 )
 
-// Article is the resolver for the article field.
-func (r *mutationResolver) Article(ctx context.Context) (*model.ArticleMutation, error) {
-	panic(fmt.Errorf("not implemented: Article - article"))
+// CreateArticle is the resolver for the createArticle field.
+func (r *mutationResolver) CreateArticle(ctx context.Context, input model.ArticleCreateInput) (model.ArticleCreateResponse, error) {
+	panic(fmt.Errorf("not implemented: CreateArticle - createArticle"))
 }
 
 // Mutation returns runtime.MutationResolver implementation.

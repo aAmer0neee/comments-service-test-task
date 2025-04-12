@@ -11,7 +11,7 @@ import (
 	"github.com/aAmer0neee/comments-service-test-task/graph/model"
 )
 
-// ListArticle is the resolver for the listArticle field.
-func (r *queryResolver) ListArticle(ctx context.Context) (*model.ListArticleQuery, error) {
-	panic(fmt.Errorf("not implemented: ListArticle - listArticle"))
+// CreateComment is the resolver for the createComment field.
+func (r *mutationResolver) CreateComment(ctx context.Context, input model.CommentCreateInput) (model.CommentCreateResponse, error) {
+	panic(fmt.Errorf("not implemented: CreateComment - createComment"))
 }

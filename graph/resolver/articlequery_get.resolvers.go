@@ -10,11 +10,12 @@ import (
 
 	"github.com/aAmer0neee/comments-service-test-task/graph/model"
 	"github.com/aAmer0neee/comments-service-test-task/graph/runtime"
+	"github.com/google/uuid"
 )
 
-// Article is the resolver for the article field.
-func (r *queryResolver) Article(ctx context.Context) (*model.ArticleQuery, error) {
-	panic(fmt.Errorf("not implemented: Article - article"))
+// GetArticle is the resolver for the getArticle field.
+func (r *queryResolver) GetArticle(ctx context.Context, articleID uuid.UUID, commentPage int32, commentPageSize int32) (model.ArticleGetResponse, error) {
+	panic(fmt.Errorf("not implemented: GetArticle - getArticle"))
 }
 
 // Query returns runtime.QueryResolver implementation.

@@ -1,9 +1,8 @@
-extend type ArticleQuery {
-    get(
+extend type Query{
+    getArticle(
     articleId: UUID!,
     commentPage: Int!,
     commentPageSize: Int!
-
     ): ArticleGetResponse!
 }
 
@@ -17,6 +16,4 @@ type ArticleGetBadRequest{
     message: String!
 }
 
-union ArticleGetResponse = 
-    | ArticleGetOK
-    | ArticleGetBadRequest
+union ArticleGetResponse = ArticleGetOK | ArticleGetBadRequest

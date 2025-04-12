@@ -1,12 +1,11 @@
-extend type ArticleMutation {
-    create(
+extend type Mutation {
+    createArticle(
         input: ArticleCreateInput!
     ): ArticleCreateResponse!
 }
 
 input ArticleCreateInput {
     id: UUID!
-    title: String!
     content: String!
 }
 
@@ -18,6 +17,4 @@ type ArticleCreateBadRequest {
     message: String!
 }
 
-union ArticleCreateResponse =
-    ArticleCreateOk
-    | ArticleCreateBadRequest
+union ArticleCreateResponse = ArticleCreateOk | ArticleCreateBadRequest

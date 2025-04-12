@@ -1,9 +1,10 @@
-extend type ListArticleQuery {
-    get(
+extend type Query{
+     getList(
         pageNumber: Int,
         pageSize: Int
     ): ListArticleGetResponse!
 }
+
 
 type ListArticleGetOk {
     articles: [Article]!
@@ -14,6 +15,4 @@ type ListArticleGetBadRequest{
     message: String!
 }
 
-union ListArticleGetResponse = 
-    | ListArticleGetOk
-    | ListArticleGetBadRequest
+union ListArticleGetResponse = ListArticleGetOk | ListArticleGetBadRequest

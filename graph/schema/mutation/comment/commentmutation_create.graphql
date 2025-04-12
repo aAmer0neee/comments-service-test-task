@@ -1,5 +1,5 @@
-extend type CommentMutation {
-    create(
+extend type Mutation {
+    createComment(
         input: CommentCreateInput!
     ): CommentCreateResponse!
 }
@@ -9,7 +9,6 @@ input CommentCreateInput {
     content: String!
     articleId: UUID!
     parentId: UUID
-    authorId: UUID!
 }
 
 type CommentCreateOk {
@@ -20,6 +19,4 @@ type CommentCreateBadRequest {
     message: String!
 }
 
-union CommentCreateResponse =
-    CommentCreateOk
-    | CommentCreateBadRequest
+union CommentCreateResponse = CommentCreateOk | CommentCreateBadRequest
