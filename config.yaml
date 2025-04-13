@@ -2,11 +2,14 @@ server:
   host: localhost
   port: :8888
   env: local
-repository:
+
+repository-mode: postgres
+
+postgres:
   user: postgres
   password: postgres
   name: mydb
   port: 5432
-  host: postgres #localhost
+  host: localhost #postgres 
   migrate: true
   sslmode: disable

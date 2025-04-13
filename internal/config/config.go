@@ -24,7 +24,9 @@ type Cfg struct {
 		Env  string `yaml:"env" env-default:"local"`
 	} `yaml:"server" env-required:"true"`
 
-	Repository struct {
+	RepositoryMode string `yaml:"repository-mode" env-default:"postgres"`
+
+	Postgres struct {
 		Port     string `yaml:"port" env-required:"true"`
 		Host     string `yaml:"host" env-required:"true"`
 		Name     string `yaml:"name" env-required:"true"`
@@ -32,7 +34,7 @@ type Cfg struct {
 		User     string `yaml:"user" env-required:"true"`
 		Migrate  bool   `yaml:"migrate" env-default:"false"`
 		Sslmode  string `yaml:"sslmode" env-default:"disable"`
-	} `yaml:"repository" env-required:"true"`
+	} `yaml:"postgres" env-required:"true"`
 }
 
 func LoadConfig() *Cfg {

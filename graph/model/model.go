@@ -36,8 +36,8 @@ type ArticleCreateBadRequest struct {
 func (ArticleCreateBadRequest) IsArticleCreateResponse() {}
 
 type ArticleCreateInput struct {
-	ID      uuid.UUID `json:"id"`
-	Content string    `json:"content"`
+	Content           string `json:"content"`
+	CommentPermission *bool  `json:"commentPermission,omitempty"`
 }
 
 type ArticleCreateOk struct {
@@ -65,6 +65,7 @@ type Comment struct {
 	CreatedAt string     `json:"createdAt"`
 	ArticleID uuid.UUID  `json:"articleId"`
 	ParentID  *uuid.UUID `json:"parentId,omitempty"`
+	Replies   []*Comment `json:"replies,omitempty"`
 }
 
 type CommentCreateBadRequest struct {
@@ -74,7 +75,6 @@ type CommentCreateBadRequest struct {
 func (CommentCreateBadRequest) IsCommentCreateResponse() {}
 
 type CommentCreateInput struct {
-	ID        uuid.UUID  `json:"id"`
 	Content   string     `json:"content"`
 	ArticleID uuid.UUID  `json:"articleId"`
 	ParentID  *uuid.UUID `json:"parentId,omitempty"`

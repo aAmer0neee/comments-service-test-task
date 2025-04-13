@@ -10,12 +10,22 @@ import (
 
 	"github.com/aAmer0neee/comments-service-test-task/graph/model"
 	"github.com/aAmer0neee/comments-service-test-task/graph/runtime"
+	"github.com/aAmer0neee/comments-service-test-task/internal/mappers"
 	"github.com/google/uuid"
 )
 
 // GetArticle is the resolver for the getArticle field.
 func (r *queryResolver) GetArticle(ctx context.Context, articleID uuid.UUID, commentPage int32, commentPageSize int32) (model.ArticleGetResponse, error) {
-	panic(fmt.Errorf("not implemented: GetArticle - getArticle"))
+	if article, comments, err := r.Service.GetArticle(articleID, commentPage, commentPageSize); err != nil {
+		return model.ArticleGetBadRequest{
+			Message: "ошибка получения статьи",
+		}, fmt.Errorf("ошибка получения статьи")
+	} else {
+		return model.ArticleGetOk{
+			Article:  mappers.DomainArticleToResponse(article),
+			Comments: mappers.DomainCommentsListToResponse(comments),
+		}, nil
+	}
 }
 
 // Query returns runtime.QueryResolver implementation.

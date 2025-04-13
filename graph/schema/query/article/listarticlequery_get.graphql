@@ -1,13 +1,13 @@
 extend type Query{
      getList(
-        pageNumber: Int,
-        pageSize: Int
+        pageNumber: Int!,
+        pageSize: Int!
     ): ListArticleGetResponse!
 }
 
 
 type ListArticleGetOk {
-    articles: [Article]!
+    articles: [Article!]!
     total: Int!
 }
 

@@ -9,9 +9,19 @@ import (
 	"fmt"
 
 	"github.com/aAmer0neee/comments-service-test-task/graph/model"
+	"github.com/aAmer0neee/comments-service-test-task/internal/mappers"
 )
 
 // CreateComment is the resolver for the createComment field.
 func (r *mutationResolver) CreateComment(ctx context.Context, input model.CommentCreateInput) (model.CommentCreateResponse, error) {
-	panic(fmt.Errorf("not implemented: CreateComment - createComment"))
+	if response, err := r.Service.
+		PostComment(mappers.InputToDomainComment(input)); err != nil {
+		return model.CommentCreateBadRequest{
+			Message: "ошибка создания комментария",
+		}, fmt.Errorf("ошибка создания комментария")
+	} else {
+		return model.CommentCreateOk{
+			Comment: mappers.DomainCommentToResponse(response),
+		}, nil
+	}
 }

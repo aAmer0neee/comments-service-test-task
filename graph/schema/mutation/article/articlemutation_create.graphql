@@ -5,8 +5,8 @@ extend type Mutation {
 }
 
 input ArticleCreateInput {
-    id: UUID!
     content: String!
+    commentPermission: Boolean
 }
 
 type ArticleCreateOk {

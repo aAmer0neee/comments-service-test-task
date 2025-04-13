@@ -5,8 +5,7 @@ extend type Mutation {
 }
 
 input CommentCreateInput {
-    id: UUID!
-    content: String!
+    content: String! # Max length: 2000 characters
     articleId: UUID!
     parentId: UUID
 }

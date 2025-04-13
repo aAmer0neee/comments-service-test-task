@@ -16,7 +16,7 @@ type Article struct {
 
 type Comment struct {
 	ID        uuid.UUID `gorm:"primaryKey;type:uuid"`
-	Content   string    `gorm:"type:text;not null"`
+	Content   string    `gorm:"type:varchar(2000);not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	ArticleID uuid.UUID `gorm:"type:uuid;not null;index" `
 	ParentID  uuid.UUID `gorm:"type:uuid;index;default:NULL" `

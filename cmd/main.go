@@ -12,6 +12,9 @@ import (
 	"github.com/aAmer0neee/comments-service-test-task/graph/resolver"
 	"github.com/aAmer0neee/comments-service-test-task/graph/runtime"
 	"github.com/aAmer0neee/comments-service-test-task/internal/config"
+	"github.com/aAmer0neee/comments-service-test-task/internal/logger"
+	"github.com/aAmer0neee/comments-service-test-task/internal/repository"
+	"github.com/aAmer0neee/comments-service-test-task/internal/service"
 
 	"github.com/gin-gonic/gin"
 
@@ -27,9 +30,17 @@ func main() {
 
 	cfg := config.LoadConfig()
 
+	logger := logger.ConfigureLogger(cfg.Server.Env)
+
+	repository, err := repository.SwitchRepository(cfg)
+	if err != nil {
+		log.Fatalf("error init repository")
+	}
+	service := service.InitService(repository, *logger)
+
 	r := gin.Default()
 
-	r.POST("/graphql", graphqlhandler())
+	r.POST("/graphql", graphqlhandler(service))
 	r.GET("/", func(ctx *gin.Context) {
 		playground.Handler("GraphQL playground", "/graphql").ServeHTTP(ctx.Writer, ctx.Request)
 	})
@@ -50,9 +61,9 @@ func main() {
 	shutdown(srv)
 }
 
-func graphqlhandler() gin.HandlerFunc {
+func graphqlhandler(service service.Service) gin.HandlerFunc {
 	handler := handler.New(runtime.NewExecutableSchema(runtime.Config{
-		Resolvers: &resolver.Resolver{},
+		Resolvers: &resolver.Resolver{Service: &service},
 	}))
 
 	handler.AddTransport(transport.Options{})

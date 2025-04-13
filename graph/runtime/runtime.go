@@ -77,6 +77,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		ParentID  func(childComplexity int) int
+		Replies   func(childComplexity int) int
 	}
 
 	CommentCreateBadRequest struct {
@@ -103,7 +104,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetArticle func(childComplexity int, articleID uuid.UUID, commentPage int32, commentPageSize int32) int
-		GetList    func(childComplexity int, pageNumber *int32, pageSize *int32) int
+		GetList    func(childComplexity int, pageNumber int32, pageSize int32) int
 	}
 }
 
@@ -113,7 +114,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetArticle(ctx context.Context, articleID uuid.UUID, commentPage int32, commentPageSize int32) (model.ArticleGetResponse, error)
-	GetList(ctx context.Context, pageNumber *int32, pageSize *int32) (model.ListArticleGetResponse, error)
+	GetList(ctx context.Context, pageNumber int32, pageSize int32) (model.ListArticleGetResponse, error)
 }
 
 type executableSchema struct {
@@ -233,6 +234,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Comment.ParentID(childComplexity), true
 
+	case "Comment.replies":
+		if e.complexity.Comment.Replies == nil {
+			break
+		}
+
+		return e.complexity.Comment.Replies(childComplexity), true
+
 	case "CommentCreateBadRequest.message":
 		if e.complexity.CommentCreateBadRequest.Message == nil {
 			break
@@ -314,7 +322,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetList(childComplexity, args["pageNumber"].(*int32), args["pageSize"].(*int32)), true
+		return e.complexity.Query.GetList(childComplexity, args["pageNumber"].(int32), args["pageSize"].(int32)), true
 
 	}
 	return 0, false
@@ -435,6 +443,7 @@ var sources = []*ast.Source{
     createdAt: String!
     articleId: UUID!
     parentId: UUID
+    replies: [Comment]
 }`, BuiltIn: false},
 	{Name: "../schema/mutation/article/articlemutation_create.graphql", Input: `extend type Mutation {
     createArticle(
@@ -443,8 +452,8 @@ var sources = []*ast.Source{
 }
 
 input ArticleCreateInput {
-    id: UUID!
     content: String!
+    commentPermission: Boolean
 }
 
 type ArticleCreateOk {
@@ -463,8 +472,7 @@ union ArticleCreateResponse = ArticleCreateOk | ArticleCreateBadRequest`, BuiltI
 }
 
 input CommentCreateInput {
-    id: UUID!
-    content: String!
+    content: String! # Max length: 2000 characters
     articleId: UUID!
     parentId: UUID
 }
@@ -500,14 +508,14 @@ union ArticleGetResponse = ArticleGetOK | ArticleGetBadRequest
 `, BuiltIn: false},
 	{Name: "../schema/query/article/listarticlequery_get.graphql", Input: `extend type Query{
      getList(
-        pageNumber: Int,
-        pageSize: Int
+        pageNumber: Int!,
+        pageSize: Int!
     ): ListArticleGetResponse!
 }
 
 
 type ListArticleGetOk {
-    articles: [Article]!
+    articles: [Article!]!
     total: Int!
 }
 
@@ -671,26 +679,26 @@ func (ec *executionContext) field_Query_getList_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_getList_argsPageNumber(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*int32, error) {
+) (int32, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageNumber"))
 	if tmp, ok := rawArgs["pageNumber"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+		return ec.unmarshalNInt2int32(ctx, tmp)
 	}
 
-	var zeroVal *int32
+	var zeroVal int32
 	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_getList_argsPageSize(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*int32, error) {
+) (int32, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
 	if tmp, ok := rawArgs["pageSize"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+		return ec.unmarshalNInt2int32(ctx, tmp)
 	}
 
-	var zeroVal *int32
+	var zeroVal int32
 	return zeroVal, nil
 }
 
@@ -1212,6 +1220,8 @@ func (ec *executionContext) fieldContext_ArticleGetOK_comments(_ context.Context
 				return ec.fieldContext_Comment_articleId(ctx, field)
 			case "parentId":
 				return ec.fieldContext_Comment_parentId(ctx, field)
+			case "replies":
+				return ec.fieldContext_Comment_replies(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
 		},
@@ -1436,6 +1446,61 @@ func (ec *executionContext) fieldContext_Comment_parentId(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Comment_replies(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Comment_replies(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Replies, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Comment)
+	fc.Result = res
+	return ec.marshalOComment2ᚕᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Comment_replies(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Comment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Comment_id(ctx, field)
+			case "content":
+				return ec.fieldContext_Comment_content(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Comment_createdAt(ctx, field)
+			case "articleId":
+				return ec.fieldContext_Comment_articleId(ctx, field)
+			case "parentId":
+				return ec.fieldContext_Comment_parentId(ctx, field)
+			case "replies":
+				return ec.fieldContext_Comment_replies(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CommentCreateBadRequest_message(ctx context.Context, field graphql.CollectedField, obj *model.CommentCreateBadRequest) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CommentCreateBadRequest_message(ctx, field)
 	if err != nil {
@@ -1529,6 +1594,8 @@ func (ec *executionContext) fieldContext_CommentCreateOk_comment(_ context.Conte
 				return ec.fieldContext_Comment_articleId(ctx, field)
 			case "parentId":
 				return ec.fieldContext_Comment_parentId(ctx, field)
+			case "replies":
+				return ec.fieldContext_Comment_replies(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
 		},
@@ -1608,7 +1675,7 @@ func (ec *executionContext) _ListArticleGetOk_articles(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.Article)
 	fc.Result = res
-	return ec.marshalNArticle2ᚕᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticle(ctx, field.Selections, res)
+	return ec.marshalNArticle2ᚕᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ListArticleGetOk_articles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1857,7 +1924,7 @@ func (ec *executionContext) _Query_getList(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetList(rctx, fc.Args["pageNumber"].(*int32), fc.Args["pageSize"].(*int32))
+		return ec.resolvers.Query().GetList(rctx, fc.Args["pageNumber"].(int32), fc.Args["pageSize"].(int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3987,20 +4054,13 @@ func (ec *executionContext) unmarshalInputArticleCreateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "content"}
+	fieldsInOrder := [...]string{"content", "commentPermission"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
 		case "content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -4008,6 +4068,13 @@ func (ec *executionContext) unmarshalInputArticleCreateInput(ctx context.Context
 				return it, err
 			}
 			it.Content = data
+		case "commentPermission":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commentPermission"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CommentPermission = data
 		}
 	}
 
@@ -4021,20 +4088,13 @@ func (ec *executionContext) unmarshalInputCommentCreateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "content", "articleId", "parentId"}
+	fieldsInOrder := [...]string{"content", "articleId", "parentId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
 		case "content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -4407,6 +4467,8 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "parentId":
 			out.Values[i] = ec._Comment_parentId(ctx, field, obj)
+		case "replies":
+			out.Values[i] = ec._Comment_replies(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5076,7 +5138,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNArticle2ᚕᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticle(ctx context.Context, sel ast.SelectionSet, v []*model.Article) graphql.Marshaler {
+func (ec *executionContext) marshalNArticle2ᚕᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Article) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5100,7 +5162,7 @@ func (ec *executionContext) marshalNArticle2ᚕᚖgithubᚗcomᚋaAmer0neeeᚋco
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOArticle2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticle(ctx, sel, v[i])
+			ret[i] = ec.marshalNArticle2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticle(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5110,6 +5172,12 @@ func (ec *executionContext) marshalNArticle2ᚕᚖgithubᚗcomᚋaAmer0neeeᚋco
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
 
 	return ret
 }
@@ -5495,13 +5563,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOArticle2ᚖgithubᚗcomᚋaAmer0neeeᚋcommentsᚑserviceᚑtestᚑtaskᚋgraphᚋmodelᚐArticle(ctx context.Context, sel ast.SelectionSet, v *model.Article) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Article(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5574,22 +5635,6 @@ func (ec *executionContext) marshalOComment2ᚖgithubᚗcomᚋaAmer0neeeᚋcomme
 		return graphql.Null
 	}
 	return ec._Comment(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalInt32(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalInt32(*v)
-	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

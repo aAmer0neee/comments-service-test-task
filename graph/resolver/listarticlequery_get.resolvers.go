@@ -9,9 +9,19 @@ import (
 	"fmt"
 
 	"github.com/aAmer0neee/comments-service-test-task/graph/model"
+	"github.com/aAmer0neee/comments-service-test-task/internal/mappers"
 )
 
 // GetList is the resolver for the getList field.
-func (r *queryResolver) GetList(ctx context.Context, pageNumber *int32, pageSize *int32) (model.ListArticleGetResponse, error) {
-	panic(fmt.Errorf("not implemented: GetList - getList"))
+func (r *queryResolver) GetList(ctx context.Context, pageNumber int32, pageSize int32) (model.ListArticleGetResponse, error) {
+	if response, count, err := r.Service.GetArticlesList(pageNumber, pageSize); err != nil {
+		return model.ListArticleGetBadRequest{
+			Message: "ошибка получения списка статей",
+		}, fmt.Errorf("ошибка получения спика статей")
+	} else {
+		return model.ListArticleGetOk{
+			Articles: mappers.DomainArticlesListToResponse(response),
+			Total:    count,
+		}, nil
+	}
 }
