@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -24,17 +25,19 @@ type Cfg struct {
 		Env  string `yaml:"env" env-default:"local"`
 	} `yaml:"server" env-required:"true"`
 
-	RepositoryMode string `yaml:"repository-mode" env-default:"postgres"`
+	RepositoryMode string `yaml:"repository-mode" env-default:"in-memory"`
 
-	Postgres struct {
-		Port     string `yaml:"port" env-required:"true"`
-		Host     string `yaml:"host" env-required:"true"`
-		Name     string `yaml:"name" env-required:"true"`
-		Password string `yaml:"password" env-required:"true"`
-		User     string `yaml:"user" env-required:"true"`
-		Migrate  bool   `yaml:"migrate" env-default:"false"`
-		Sslmode  string `yaml:"sslmode" env-default:"disable"`
-	} `yaml:"postgres" env-required:"true"`
+	Postgres PostgresCfg `yaml:"postgres" env-required:"false"`
+}
+
+type PostgresCfg struct {
+	Port     string `yaml:"port"`
+	Host     string `yaml:"host"`
+	Name     string `yaml:"name"`
+	Password string `yaml:"password"`
+	User     string `yaml:"user"`
+	Migrate  bool   `yaml:"migrate"`
+	Sslmode  string `yaml:"sslmode" env-default:"disable"`
 }
 
 func LoadConfig() *Cfg {
@@ -44,7 +47,9 @@ func LoadConfig() *Cfg {
 	if err := cleanenv.ReadConfig(configPath(), &cfg); err != nil {
 		log.Fatalf("[ERROR] read config %s", err.Error())
 	}
-
+	if cfg.RepositoryMode == "postgres" {
+		validatePostgresConfig(cfg.Postgres)
+	}
 	return &cfg
 }
 
@@ -58,4 +63,15 @@ func configPath() string {
 	}
 
 	return *path
+}
+
+func validatePostgresConfig(cfg PostgresCfg) error {
+	if cfg.Host == "" ||
+		cfg.Port == "" ||
+		cfg.Password == "" ||
+		cfg.Name == "" ||
+		cfg.User == "" {
+		return fmt.Errorf("config fields are required when using 'postgres' repository mode %+v", cfg)
+	}
+	return nil
 }

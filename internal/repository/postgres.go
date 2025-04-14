@@ -69,9 +69,12 @@ func (r *PostgresRepository) GetListArticles(page, limit int) ([]domain.Article,
 	return article, nil
 }
 
-func (r *PostgresRepository) RecordsCount(a interface{}) (int32, error) {
+func (r *PostgresRepository) ArticleRecordsCount(article domain.Article) (int32, error) {
 	var count int64
-	return int32(count), r.Db.Model(&a).Count(&count).Error
+	return int32(count), 
+	r.Db.Model(convertArticleToGorm(article)).
+	Count(&count).
+	Error
 }
 
 func (r *PostgresRepository) CreateComment(comment domain.Comment) (domain.Comment, error) {
@@ -85,26 +88,26 @@ func (r *PostgresRepository) CreateComment(comment domain.Comment) (domain.Comme
 	return convertGormToComment(gormComment), nil
 }
 
-func (r *PostgresRepository) GetRootComments(page, limit int) ([]domain.Comment, error) {
+func (r *PostgresRepository) GetComments(articleId uuid.UUID, page, limit int) ([]domain.Comment, error) {
 	offset := (page - 1) * limit
 	dst := []Comment{}
 
 	query := `WITH RECURSIVE root_comments AS (
     SELECT * FROM comments
-    WHERE parent_id IS NULL
+    WHERE parent_id IS NULL AND article_id = $3
     ORDER BY created_at DESC
     OFFSET $1 LIMIT $2
-),
-comment_tree AS (
-    SELECT * FROM root_comments
-    UNION ALL
-    SELECT c.* FROM comments c
-    INNER JOIN comment_tree ct ON c.parent_id = ct.id
-)
-SELECT * FROM comment_tree
-ORDER BY parent_id DESC, created_at DESC;`
+	),
+	comment_tree AS (
+		SELECT * FROM root_comments
+		UNION ALL
+		SELECT c.* FROM comments c
+		INNER JOIN comment_tree ct ON c.parent_id = ct.id
+	)
+	SELECT * FROM comment_tree
+	ORDER BY parent_id DESC, created_at DESC;`
 
-	err := r.Db.Raw(query, offset, limit).Scan(&dst).Error /* 	Order("created_at DESC").Where("parent_id is null").Offset(offset).Limit(limit).Find(&dst).Error */
+	err := r.Db.Raw(query, offset, limit, articleId).Scan(&dst).Error /* 	Order("created_at DESC").Where("parent_id is null").Offset(offset).Limit(limit).Find(&dst).Error */
 	if err != nil {
 		return nil, err
 	}
@@ -116,4 +119,13 @@ ORDER BY parent_id DESC, created_at DESC;`
 
 	}
 	return comment, nil
+}
+
+func (r *PostgresRepository) CommentsRecordCount(comment domain.Comment) (int32, error) {
+	var count int64
+	return int32(count),
+	r.Db.Model(convertCommentToGorm(comment)).
+	Where("parent_id is null").
+	Count(&count).
+	Error
 }

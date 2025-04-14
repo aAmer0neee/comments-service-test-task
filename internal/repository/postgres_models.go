@@ -10,7 +10,7 @@ import (
 type Article struct {
 	ID                uuid.UUID `gorm:"primaryKey;type:uuid"`
 	Content           string    `gorm:"type:text;not null"`
-	CreatedAt         time.Time `gorm:"autoCreateTime"`
+	CreatedAt         time.Time `gorm:"not null"`
 	CommentPermission bool      `gorm:"default:true"`
 }
 

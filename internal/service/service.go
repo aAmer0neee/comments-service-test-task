@@ -3,6 +3,7 @@ package service
 import (
 	"log/slog"
 	_ "sort"
+	"time"
 
 	"github.com/aAmer0neee/comments-service-test-task/internal/domain"
 	"github.com/aAmer0neee/comments-service-test-task/internal/repository"
@@ -23,6 +24,7 @@ func InitService(r repository.Repository, l slog.Logger) Service {
 
 func (s *Service) PostArticle(article domain.Article) (domain.Article, error) {
 	article.ID = uuid.New()
+	article.CreatedAt = time.Now()
 	updateArticle, err := s.Repo.CreateArticle(article)
 	if err != nil {
 		s.Log.Info("ошибка добавления записи", "message", err.Error())
@@ -37,7 +39,7 @@ func (s *Service) GetArticlesList(page, limit int32) ([]domain.Article, int32, e
 		s.Log.Info("ошибка получения списка статей", "message", err.Error())
 		return []domain.Article{}, 0, err
 	}
-	recordCount, err := s.Repo.RecordsCount(domain.Article{})
+	recordCount, err := s.Repo.ArticleRecordsCount(domain.Article{})
 	if err != nil {
 		s.Log.Info("ошибка получения количества статей", "message", err.Error())
 		return []domain.Article{}, 0, err
@@ -47,6 +49,7 @@ func (s *Service) GetArticlesList(page, limit int32) ([]domain.Article, int32, e
 
 func (s *Service) PostComment(comment domain.Comment) (domain.Comment, error) {
 	comment.ID = uuid.New()
+	comment.CreatedAt = time.Now()
 	updateComment, err := s.Repo.CreateComment(comment)
 	if err != nil {
 		s.Log.Info("ошибка добавления записи", "message", err.Error())
@@ -61,49 +64,10 @@ func (s *Service) GetArticle(id uuid.UUID, commentPage, pageLimit int32) (domain
 		s.Log.Info("ошибка получения статьи", "message", err.Error())
 		return domain.Article{}, []domain.Comment{}, err
 	}
-	comments, err := s.Repo.GetRootComments(int(commentPage), int(pageLimit))
+	comments, err := s.Repo.GetComments(article.ID, int(commentPage), int(pageLimit))
 	if err != nil {
 		s.Log.Info("ошибка получения списка комментариев", "message", err.Error())
 		return domain.Article{}, []domain.Comment{}, nil
 	}
 	return article, comments, nil
 }
-
-/* func (s *Service)normalzeComentsTree(tree []domain.Comment)[]domain.Comment{
-	commentMap := make (map[uuid.UUID][]domain.Comment)
-
-	rootComments := []domain.Comment{}
-	for _, comment := range tree {
-		if comment.ParentID == uuid.Nil {
-			rootComments = append(rootComments, comment)
-		} else {
-			commentMap[comment.ParentID] = append(commentMap[comment.ParentID], comment)
-		}
-	}
-
-	var addComment func(*domain.Comment)
-
-	addComment = func(c *domain.Comment) {
-		if replies, ok := commentMap[c.ID]; ok {
-
-			s.sortCreatedAt(replies)
-
-			for i:= range replies {
-				addComment(&replies[i])
-				c.Replies = append(c.Replies, replies[i])
-			}
-
-		}
-	}
-
-	for i := range rootComments {
-		addComment(&rootComments[i])
-	}
-	return rootComments
-}
-
-func (s *Service)sortCreatedAt(comments []domain.Comment){
-	sort.Slice(comments, func(i, j int) bool {
-		return comments[i].CreatedAt.Before(comments[j].CreatedAt)
-	})
-} */

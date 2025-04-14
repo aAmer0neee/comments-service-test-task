@@ -9,14 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/aAmer0neee/comments-service-test-task/graph/resolver"
 	"github.com/aAmer0neee/comments-service-test-task/graph/runtime"
 	"github.com/aAmer0neee/comments-service-test-task/internal/config"
 	"github.com/aAmer0neee/comments-service-test-task/internal/logger"
 	"github.com/aAmer0neee/comments-service-test-task/internal/repository"
 	"github.com/aAmer0neee/comments-service-test-task/internal/service"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -30,12 +30,13 @@ func main() {
 
 	cfg := config.LoadConfig()
 
-	logger := logger.ConfigureLogger(cfg.Server.Env)
-
-	repository, err := repository.SwitchRepository(cfg)
+	repository, err := repository.InitRepository(cfg)
 	if err != nil {
 		log.Fatalf("error init repository")
 	}
+
+	logger := logger.ConfigureLogger(cfg.Server.Env)
+
 	service := service.InitService(repository, *logger)
 
 	r := gin.Default()
@@ -47,14 +48,14 @@ func main() {
 
 	go func() {
 
-		if err := r.Run(cfg.Server.Port); err != nil {
+		if err := r.Run(":" + cfg.Server.Port); err != nil {
 			log.Fatalf("ошибка запуска сервера %v", err.Error())
 		}
 
 	}()
 
 	srv := &http.Server{
-		Addr:    cfg.Server.Port,
+		Addr:    ":" + cfg.Server.Port,
 		Handler: r,
 	}
 

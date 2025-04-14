@@ -1,9 +1,9 @@
 server:
   host: localhost
-  port: :8888
+  port: 8888
   env: local
 
-repository-mode: postgres
+repository-mode: postgres #default: in-memory
 
 postgres:
   user: postgres
