@@ -71,6 +71,132 @@ docker run -d   --name postgres   --network comment-network   -p 5432:5432   -e 
 docker run -d   --name comments-service   --network comment-network   -p 8888:8888   comments-service-test-task:latest
 ```
 
+## GraphQL API
+
+### Добавить статью
+```yaml
+mutation {
+  createArticle(input: {
+    content: "тест1",
+    commentPermission: true
+  }) {
+    ... on ArticleCreateOk {
+      article {
+        id
+        content
+        createdAt
+        commentPermission
+      }
+    }
+    ... on ArticleCreateBadRequest {
+      message
+    }
+  }
+}
+```
+
+### Добавить комментарий
+```yaml
+mutation {
+  createComment(input: {
+    content: "1 уровень",
+    articleId:   "fcedfe1c-b1d5-4499-9218-cd32d7f35c43"
+      parentId: null
+  }) {
+    ... on CommentCreateOk {
+      comment {
+        id
+        content
+        createdAt
+        articleId
+        parentId
+        replies {
+          id
+          content
+          createdAt
+        }
+      }
+    }
+    ... on CommentCreateBadRequest {
+      message
+    }
+  }
+}
+```
+
+### Список статей
+```yaml
+query {
+  getList(pageNumber: 1, pageSize: 10) {
+    ... on ListArticleGetOk {
+      articles {
+        id
+        content
+        createdAt
+        commentPermission
+      }
+      total
+    }
+    ... on ListArticleGetBadRequest {
+      message
+    }
+  }
+}
+```
+
+### Статья с комментарием
+```yaml
+query {
+  getArticle(
+    articleId: "fcedfe1c-b1d5-4499-9218-cd32d7f35c43"
+    commentPage: 1
+    commentPageSize: 20
+  ) {
+    ... on ArticleGetOK {
+      article {
+        id
+        content
+        createdAt
+        commentPermission
+      }
+      comments {
+        id
+        content
+        createdAt
+        replies {
+          id
+          content
+          createdAt
+          replies {
+            id
+            content
+            createdAt
+            replies {
+              id
+              content
+              createdAt
+              replies {
+            id
+            content
+            createdAt
+            replies {
+              id
+              content
+              createdAt
+            }
+          }
+            }
+          }
+        }
+      }
+    }
+    ... on ArticleGetBadRequest {
+      message
+    }
+  }
+}
+```
+
 ## Структура
 
 ```yaml
