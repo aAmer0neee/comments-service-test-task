@@ -64,7 +64,7 @@ func main() {
 
 func graphqlhandler(service service.Service) gin.HandlerFunc {
 	handler := handler.New(runtime.NewExecutableSchema(runtime.Config{
-		Resolvers: &resolver.Resolver{Service: &service},
+		Resolvers: &resolver.Resolver{Service: service},
 	}))
 
 	handler.AddTransport(transport.Options{})

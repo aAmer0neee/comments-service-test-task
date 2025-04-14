@@ -6,4 +6,4 @@ import "github.com/aAmer0neee/comments-service-test-task/internal/service"
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-type Resolver struct{ Service *service.Service }
+type Resolver struct{ Service service.Service }

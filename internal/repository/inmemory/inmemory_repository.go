@@ -1,4 +1,4 @@
-package repository
+package inmemory
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ type MemoryRepository struct {
 	articles          map[uuid.UUID]domain.Article // ключ - идентификатор статьи
 	createdAtArticles []articleWithDate
 
-	comments          map[uuid.UUID]domain.Comment //ключ - идентификатор комментария
+	comments map[uuid.UUID]domain.Comment //ключ - идентификатор комментария
 
 	commentReply map[uuid.UUID][]*domain.Comment
 }
@@ -31,13 +31,13 @@ type commentWithDate struct {
 	createdAt time.Time
 }
 
-func initInMemory() (*MemoryRepository, error) {
+func InitInMemory() (*MemoryRepository, error) {
 	return &MemoryRepository{
 		mu:                sync.RWMutex{},
 		articles:          make(map[uuid.UUID]domain.Article),
 		createdAtArticles: make([]articleWithDate, 0),
 		comments:          make(map[uuid.UUID]domain.Comment),
-		commentReply: map[uuid.UUID][]*domain.Comment{},
+		commentReply:      map[uuid.UUID][]*domain.Comment{},
 	}, nil
 }
 
@@ -130,7 +130,7 @@ func (r *MemoryRepository) CreateComment(comment domain.Comment) (domain.Comment
 func (r *MemoryRepository) GetComments(articleId uuid.UUID, page, limit int) ([]domain.Comment, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	rootComments := r.rootComments(articleId)
 
 	start := (page - 1) * limit

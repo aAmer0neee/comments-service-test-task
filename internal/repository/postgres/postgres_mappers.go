@@ -1,4 +1,4 @@
-package repository
+package postgres
 
 import (
 	"github.com/aAmer0neee/comments-service-test-task/internal/domain"

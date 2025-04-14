@@ -1,4 +1,4 @@
-package repository
+package postgres
 
 import (
 	"fmt"
@@ -71,10 +71,10 @@ func (r *PostgresRepository) GetListArticles(page, limit int) ([]domain.Article,
 
 func (r *PostgresRepository) ArticleRecordsCount(article domain.Article) (int32, error) {
 	var count int64
-	return int32(count), 
-	r.Db.Model(convertArticleToGorm(article)).
-	Count(&count).
-	Error
+	return int32(count),
+		r.Db.Model(convertArticleToGorm(article)).
+			Count(&count).
+			Error
 }
 
 func (r *PostgresRepository) CreateComment(comment domain.Comment) (domain.Comment, error) {
@@ -124,8 +124,8 @@ func (r *PostgresRepository) GetComments(articleId uuid.UUID, page, limit int) (
 func (r *PostgresRepository) CommentsRecordCount(comment domain.Comment) (int32, error) {
 	var count int64
 	return int32(count),
-	r.Db.Model(convertCommentToGorm(comment)).
-	Where("parent_id is null").
-	Count(&count).
-	Error
+		r.Db.Model(convertCommentToGorm(comment)).
+			Where("parent_id is null").
+			Count(&count).
+			Error
 }

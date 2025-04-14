@@ -46,19 +46,19 @@ func InputToDomainComment(comment model.CommentCreateInput) domain.Comment {
 }
 
 func DomainCommentToResponse(comment domain.Comment) *model.Comment {
-    var replies []*model.Comment
-    if len(comment.Replies) > 0 {
-        replies = DomainCommentsListToResponse(comment.Replies)
-    }
-    return &model.Comment{
-        ID:        comment.ID,
-        Content:   comment.Content,
-        CreatedAt: comment.CreatedAt.String(),
-        ArticleID: comment.ArticleID,
+	var replies []*model.Comment
+	if len(comment.Replies) > 0 {
+		replies = DomainCommentsListToResponse(comment.Replies)
+	}
+	return &model.Comment{
+		ID:        comment.ID,
+		Content:   comment.Content,
+		CreatedAt: comment.CreatedAt.String(),
+		ArticleID: comment.ArticleID,
 
-        ParentID:  &comment.ParentID,
-        Replies:   replies,
-    }
+		ParentID: &comment.ParentID,
+		Replies:  replies,
+	}
 }
 
 func DomainCommentsListToResponse(articles []domain.Comment) []*model.Comment {
